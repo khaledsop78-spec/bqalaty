@@ -444,7 +444,27 @@ function stopScanner() {
         // تشغيل التطبيق
         showProducts();
         showCart();
+async function testCamera() {
+    const video = document.getElementById("scanner");
 
+    if (!video.srcObject) {
+        alert("شغّل الكاميرا أولاً");
+        return;
+    }
+
+    const track = video.srcObject.getVideoTracks()[0];
+    const capabilities = track.getCapabilities();
+    const settings = track.getSettings();
+
+    alert(
+        "معلومات الكاميرا:\n\n" +
+        "الدقة: " + settings.width + " × " + settings.height + "\n" +
+        "التركيز: " + (capabilities.focusMode || "غير معروف") + "\n" +
+        "التقريب: " + (capabilities.zoom ? "مدعوم" : "غير مدعوم") + "\n" +
+        "وضع التركيز المستمر: " +
+        (capabilities.focusMode?.includes("continuous") ? "مدعوم" : "غير مدعوم")
+    );
+}
     </script>
 
 </body>
