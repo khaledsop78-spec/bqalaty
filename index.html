@@ -218,12 +218,18 @@
                         السعر: ${product.price.toFixed(2)} ريال
                     </div>
 
-                    <button
-                        class="delete-button"
-                        onclick="deleteProduct('${barcode}')"
-                    >
-                        حذف
-                    </button>
+                   <button
+    onclick="addToCart('${barcode}')"
+>
+    إضافة للسلة
+</button>
+
+<button
+    class="delete-button"
+    onclick="deleteProduct('${barcode}')"
+>
+    حذف
+</button>
                 `;
 
                 container.appendChild(div);
