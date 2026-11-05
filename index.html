@@ -333,10 +333,22 @@ async function startScanner() {
         codeReader = new ZXingBrowser.BrowserMultiFormatReader();
 
         video.style.display = "block";
+        video.style.width = "100%";
+        video.style.height = "350px";
+        video.style.objectFit = "contain";
         stopButton.style.display = "block";
 
-        await codeReader.decodeFromVideoDevice(
-            undefined,
+        const constraints = {
+            audio: false,
+            video: {
+                facingMode: { ideal: "environment" },
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            }
+        };
+
+        await codeReader.decodeFromConstraints(
+            constraints,
             video,
             (result, error) => {
 
@@ -349,18 +361,26 @@ async function startScanner() {
                     addToCart(barcode);
 
                 }
-
             }
         );
 
+        // محاولة تفعيل التركيز التلقائي
+        const track = video.srcObject.getVideoTracks()[0];
+
+        try {
+            await track.applyConstraints({
+                advanced: [{ focusMode: "continuous" }]
+            });
+        } catch (e) {
+            console.log("التركيز التلقائي غير مدعوم");
+        }
+
     } catch (error) {
 
-        alert("تعذر تشغيل الكاميرا. تأكد من السماح باستخدامها.");
-
+        alert("تعذر تشغيل الكاميرا: " + error.message);
         console.error(error);
 
     }
-
 }
 
 // إيقاف الكاميرا
