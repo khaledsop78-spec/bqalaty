@@ -320,9 +320,11 @@
         }
 
 // قارئ الباركود
+// قارئ الباركود والتحكم بالكاميرا
 let codeReader = null;
+let scannerControls = null;
 
-// تشغيل الكاميرا وقراءة الباركود
+// تشغيل الكاميرا
 async function startScanner() {
 
     const video = document.getElementById("scanner");
@@ -334,20 +336,25 @@ async function startScanner() {
 
         video.style.display = "block";
         video.style.width = "100%";
-        video.style.height = "350px";
+        video.style.height = "400px";
         video.style.objectFit = "contain";
+        video.setAttribute("playsinline", "");
+        video.setAttribute("autoplay", "");
+        video.muted = true;
+
         stopButton.style.display = "block";
 
         const constraints = {
             audio: false,
             video: {
                 facingMode: { ideal: "environment" },
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                frameRate: { ideal: 30 }
             }
         };
 
-        await codeReader.decodeFromConstraints(
+        scannerControls = await codeReader.decodeFromConstraints(
             constraints,
             video,
             (result, error) => {
@@ -361,30 +368,54 @@ async function startScanner() {
                     addToCart(barcode);
 
                 }
+
             }
         );
 
-        // محاولة تفعيل التركيز التلقائي
-        const track = video.srcObject.getVideoTracks()[0];
+        // تحسين التركيز التلقائي
+        const stream = video.srcObject;
 
-        try {
-            await track.applyConstraints({
-                advanced: [{ focusMode: "continuous" }]
-            });
-        } catch (e) {
-            console.log("التركيز التلقائي غير مدعوم");
+        if (stream) {
+
+            const track = stream.getVideoTracks()[0];
+
+            const capabilities = track.getCapabilities();
+
+            if (
+                capabilities.focusMode &&
+                capabilities.focusMode.includes("continuous")
+            ) {
+
+                await track.applyConstraints({
+                    advanced: [
+                        { focusMode: "continuous" }
+                    ]
+                });
+
+            }
+
         }
 
     } catch (error) {
 
         alert("تعذر تشغيل الكاميرا: " + error.message);
+
         console.error(error);
 
     }
+
 }
+
 
 // إيقاف الكاميرا
 function stopScanner() {
+
+    if (scannerControls) {
+
+        scannerControls.stop();
+        scannerControls = null;
+
+    }
 
     if (codeReader) {
 
@@ -393,7 +424,19 @@ function stopScanner() {
 
     }
 
-    document.getElementById("scanner").style.display = "none";
+    const video = document.getElementById("scanner");
+
+    if (video.srcObject) {
+
+        video.srcObject.getTracks().forEach(track => {
+            track.stop();
+        });
+
+        video.srcObject = null;
+
+    }
+
+    video.style.display = "none";
 
     document.getElementById("stopScanner").style.display = "none";
 
