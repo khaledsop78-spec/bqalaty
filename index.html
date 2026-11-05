@@ -361,7 +361,10 @@ async function startScanner() {
 
                 scannerRunning = false;
                 await stopScanner();
-                addToCart(decodedText.trim());
+
+alert("الباركود الذي قرأته الكاميرا:\n" + decodedText);
+
+addToCart(decodedText.trim());
             },
             () => {}
         );
