@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بقالتي</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 15px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            margin: 6px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .save-button {
+            background: #222;
+            color: white;
+        }
+
+        .scan-button {
+            background: #1976d2;
+            color: white;
+        }
+
+        .product {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            gap: 10px;
+        }
+
+        .product button {
+            width: auto;
+            margin: 0;
+            padding: 8px 12px;
+        }
+
+        .delete-button {
+            background: #e53935;
+            color: white;
+        }
+
+        .total {
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🛒 بقالتي</h1>
+
+    <!-- السلة -->
+    <div class="card">
+        <h2>السلة</h2>
+
+        <div id="cart"></div>
+
+        <div class="total">
+            الإجمالي: <span id="total">0.00</span> ريال
+        </div>
+
+        <button onclick="clearCart()">
+            مسح السلة
+        </button>
+    </div>
+
+    <!-- إضافة منتج -->
+    <div class="card">
+        <h2>إضافة منتج</h2>
+
+        <input
+            type="text"
+            id="barcode"
+            placeholder="باركود المنتج"
+        >
+
+        <input
+            type="text"
+            id="name"
+            placeholder="اسم المنتج"
+        >
+
+        <input
+            type="number"
+            id="price"
+            placeholder="السعر"
+            step="0.01"
+        >
+
+        <button
+            class="save-button"
+            onclick="addProduct()"
+        >
+            حفظ المنتج
+        </button>
+    </div>
+
+    <!-- المنتجات -->
+    <div class="card">
+        <h2>المنتجات المسجلة</h2>
+
+        <div id="products"></div>
+    </div>
+
+    <script>
+
+        // المنتجات المحفوظة على الجهاز
+        let products = JSON.parse(
+            localStorage.getItem("products") || "{}"
+        );
+
+        // السلة
+        let cart = [];
+
+
+        // حفظ المنتجات
+        function saveProducts() {
+            localStorage.setItem(
+                "products",
+                JSON.stringify(products)
+            );
+        }
+
+
+        // إضافة منتج جديد
+        function addProduct() {
+
+            const barcode =
+                document.getElementById("barcode").value.trim();
+
+            const name =
+                document.getElementById("name").value.trim();
+
+            const price =
+                parseFloat(
+                    document.getElementById("price").value
+                );
+
+            if (!barcode || !name || isNaN(price)) {
+                alert("أدخل الباركود والاسم والسعر.");
+                return;
+            }
+
+            products[barcode] = {
+                name: name,
+                price: price
+            };
+
+            saveProducts();
+            showProducts();
+
+            document.getElementById("barcode").value = "";
+            document.getElementById("name").value = "";
+            document.getElementById("price").value = "";
+
+            alert("تم حفظ المنتج بنجاح.");
+        }
+
+
+        // عرض المنتجات
+        function showProducts() {
+
+            const container =
+                document.getElementById("products");
+
+            container.innerHTML = "";
+
+            for (const barcode in products) {
+
+                const product = products[barcode];
+
+                const div = document.createElement("div");
+
+                div.className = "product";
+
+                div.innerHTML = `
+                    <div>
+                        <strong>${product.name}</strong><br>
+                        الباركود: ${barcode}<br>
+                        السعر: ${product.price.toFixed(2)} ريال
+                    </div>
+
+                    <button
+                        class="delete-button"
+                        onclick="deleteProduct('${barcode}')"
+                    >
+                        حذف
+                    </button>
+                `;
+
+                container.appendChild(div);
+            }
+        }
+
+
+        // إضافة منتج إلى السلة
+        function addToCart(barcode) {
+
+            if (!products[barcode]) {
+                alert("هذا المنتج غير مسجل.");
+                return;
+            }
+
+            cart.push(products[barcode]);
+
+            showCart();
+        }
+
+
+        // عرض السلة
+        function showCart() {
+
+            const container =
+                document.getElementById("cart");
+
+            const totalElement =
+                document.getElementById("total");
+
+            container.innerHTML = "";
+
+            let total = 0;
+
+            cart.forEach((product) => {
+
+                const div = document.createElement("div");
+
+                div.className = "product";
+
+                div.innerHTML = `
+                    <div>
+                        ${product.name}
+                    </div>
+
+                    <div>
+                        ${product.price.toFixed(2)} ريال
+                    </div>
+                `;
+
+                container.appendChild(div);
+
+                total += product.price;
+            });
+
+            totalElement.textContent =
+                total.toFixed(2);
+        }
+
+
+        // حذف منتج من المنتجات المسجلة
+        function deleteProduct(barcode) {
+
+            delete products[barcode];
+
+            saveProducts();
+            showProducts();
+        }
+
+
+        // مسح السلة
+        function clearCart() {
+
+            cart = [];
+
+            showCart();
+        }
+
+
+        // تشغيل التطبيق
+        showProducts();
+        showCart();
+
+    </script>
+
+</body>
+</html>
