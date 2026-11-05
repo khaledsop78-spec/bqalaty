@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بقالتي</title>
-
+<script src="https://unpkg.com/@zxing/browser@0.2.1"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -90,7 +90,19 @@
     <!-- السلة -->
     <div class="card">
         <h2>السلة</h2>
+<button class="scan-button" onclick="startScanner()">
+    📷 مسح الباركود
+</button>
 
+<video id="scanner"
+       style="width:100%;display:none;border-radius:12px"
+       playsinline></video>
+
+<button onclick="stopScanner()"
+        id="stopScanner"
+        style="display:none">
+    إيقاف الكاميرا
+</button>
         <div id="cart"></div>
 
         <div class="total">
@@ -307,7 +319,65 @@
             showCart();
         }
 
+// قارئ الباركود
+let codeReader = null;
 
+// تشغيل الكاميرا وقراءة الباركود
+async function startScanner() {
+
+    const video = document.getElementById("scanner");
+    const stopButton = document.getElementById("stopScanner");
+
+    try {
+
+        codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+
+        video.style.display = "block";
+        stopButton.style.display = "block";
+
+        await codeReader.decodeFromVideoDevice(
+            undefined,
+            video,
+            (result, error) => {
+
+                if (result) {
+
+                    const barcode = result.getText().trim();
+
+                    stopScanner();
+
+                    addToCart(barcode);
+
+                }
+
+            }
+        );
+
+    } catch (error) {
+
+        alert("تعذر تشغيل الكاميرا. تأكد من السماح باستخدامها.");
+
+        console.error(error);
+
+    }
+
+}
+
+// إيقاف الكاميرا
+function stopScanner() {
+
+    if (codeReader) {
+
+        codeReader.reset();
+        codeReader = null;
+
+    }
+
+    document.getElementById("scanner").style.display = "none";
+
+    document.getElementById("stopScanner").style.display = "none";
+
+}
         // تشغيل التطبيق
         showProducts();
         showCart();
