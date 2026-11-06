@@ -361,21 +361,19 @@ async function listAvailableCameras() {
             return;
         }
 
-        let result = "الكاميرات المتاحة:\n\n";
+        let result = "تفاصيل الكاميرات:\n\n";
 
         cameras.forEach((camera, index) => {
             result +=
-                (index + 1) + ". " +
-                (camera.label || "كاميرا بدون اسم") +
-                "\n\n";
+                "الكاميرا " + (index + 1) + "\n" +
+                "الاسم: " + camera.label + "\n" +
+                "المعرّف: " + camera.id + "\n\n";
         });
-
-        result += "عدد الكاميرات: " + cameras.length;
 
         alert(result);
 
     } catch (error) {
-        alert("تعذر فحص الكاميرات: " + error.message);
+        alert("خطأ: " + error.message);
     }
 }
         
