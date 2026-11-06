@@ -419,68 +419,56 @@ function isValidEAN13(code) {
          * نقرأ قدراتها الحقيقية ثم نطلب أفضل
          * إعدادات متاحة للتركيز والدقة.
          */
+try {
+    const capabilities =
+        html5QrCode.getRunningTrackCapabilities();
 
-        try {
-            const capabilities =
-                html5QrCode.getRunningTrackCapabilities();
+    const settings =
+        html5QrCode.getRunningTrackSettings();
 
-            console.log("Camera capabilities:", capabilities);
+    let message =
+        "إعدادات الكاميرا الفعلية:\n\n" +
 
-            const constraints = {};
+        "الدقة: " +
+        (settings.width || "غير معروف") +
+        " × " +
+        (settings.height || "غير معروف") +
+        "\n\n" +
 
-            if (capabilities.width) {
-                constraints.width = {
-                    ideal: capabilities.width.max
-                };
-            }
+        "FPS: " +
+        (settings.frameRate || "غير معروف") +
+        "\n\n" +
 
-            if (capabilities.height) {
-                constraints.height = {
-                    ideal: capabilities.height.max
-                };
-            }
+        "Focus Mode: " +
+        (settings.focusMode || "غير متوفر") +
+        "\n\n" +
 
-            if (capabilities.frameRate) {
-                constraints.frameRate = {
-                    ideal: Math.min(
-                        capabilities.frameRate.max,
-                        30
-                    )
-                };
-            }
+        "Zoom الحالي: " +
+        (settings.zoom ?? "غير متوفر") +
+        "\n\n" +
 
-            if (
-                capabilities.focusMode &&
-                capabilities.focusMode.includes("continuous")
-            ) {
-                constraints.focusMode = "continuous";
-            }
+        "أوضاع التركيز المدعومة:\n" +
+        (capabilities.focusMode
+            ? capabilities.focusMode.join(", ")
+            : "غير متوفرة") +
+        "\n\n" +
 
-            if (Object.keys(constraints).length > 0) {
-                try {
-                    await html5QrCode.applyVideoConstraints(
-                        constraints
-                    );
+        "Zoom مدعوم: " +
+        (capabilities.zoom ? "نعم" : "لا");
 
-                    console.log(
-                        "Camera constraints applied:",
-                        constraints
-                    );
+    alert(message);
 
-                } catch (error) {
-                    console.log(
-                        "Could not apply camera constraints:",
-                        error
-                    );
-                }
-            }
+    console.log("Camera capabilities:", capabilities);
+    console.log("Camera settings:", settings);
 
-        } catch (error) {
-            console.log(
-                "Could not read camera capabilities:",
-                error
-            );
-        }
+} catch (error) {
+    console.log(
+        "Could not read camera information:",
+        error
+    );
+}
+        
+               
 
     } catch (error) {
         scannerRunning = false;
