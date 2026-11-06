@@ -324,54 +324,117 @@
 
 // قارئ الباركود
 // قارئ الباركود والتحكم بالكاميرا
+
 let html5QrCode = null;
 let scannerRunning = false;
+
+let lastCandidate = "";
+let sameCandidateCount = 0;
+
+// التحقق من صحة باركود EAN-13
+function isValidEAN13(code) {
+    if (!/^\d{13}$/.test(code)) return false;
+
+    const digits = code.split("").map(Number);
+
+    let sum = 0;
+
+    for (let i = 0; i < 12; i++) {
+        sum += digits[i] * (i % 2 === 0 ? 1 : 3);
+    }
+
+    const checkDigit = (10 - (sum % 10)) % 10;
+
+    return checkDigit === digits[12];
+}
 
 async function startScanner() {
     const scanner = document.getElementById("scanner");
     const stopButton = document.getElementById("stopScanner");
 
     try {
+        lastCandidate = "";
+        sameCandidateCount = 0;
+
         scanner.style.display = "block";
         stopButton.style.display = "block";
 
-        html5QrCode = new Html5Qrcode("scanner");
+        html5QrCode = new Html5Qrcode(
+            "scanner",
+            {
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.EAN_13
+                ]
+            }
+        );
+
+        const config = {
+            fps: 12,
+
+            qrbox: (width, height) => {
+                return {
+                    width: Math.min(width - 30, 360),
+                    height: Math.min(height - 30, 140)
+                };
+            },
+
+            aspectRatio: 16 / 9,
+
+            videoConstraints: {
+                facingMode: "environment",
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
+                frameRate: { ideal: 24 },
+                advanced: [
+                    { focusMode: "continuous" }
+                ]
+            }
+        };
+
         scannerRunning = true;
 
         await html5QrCode.start(
             { facingMode: "environment" },
-           {
-    fps: 15,
-    qrbox: {
-        width: 320,
-        height: 120
-    },
-    videoConstraints: {
-        facingMode: { ideal: "environment" },
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
-        frameRate: { ideal: 30 },
-        advanced: [
-            { focusMode: "continuous" }
-        ]
-    }
-},
+            config,
+
             async (decodedText) => {
                 if (!scannerRunning) return;
 
-                scannerRunning = false;
-                await stopScanner();
+                const barcode = decodedText.trim();
 
-alert("الباركود الذي قرأته الكاميرا:\n" + decodedText);
+                // تجاهل أي قراءة ليست EAN-13 صحيحة
+                if (!isValidEAN13(barcode)) {
+                    lastCandidate = "";
+                    sameCandidateCount = 0;
+                    return;
+                }
 
-addToCart(decodedText.trim());
+                // انتظار قراءتين متطابقتين
+                if (barcode === lastCandidate) {
+                    sameCandidateCount++;
+                } else {
+                    lastCandidate = barcode;
+                    sameCandidateCount = 1;
+                }
+
+                // قبول الرقم بعد قراءتين متطابقتين
+                if (sameCandidateCount >= 2) {
+                    scannerRunning = false;
+
+                    await stopScanner();
+
+                    addToCart(barcode);
+                }
             },
+
             () => {}
         );
 
     } catch (error) {
         scannerRunning = false;
+
         alert("تعذر تشغيل الكاميرا: " + error);
+
         await stopScanner();
     }
 }
@@ -384,7 +447,9 @@ async function stopScanner() {
             if (html5QrCode.isScanning) {
                 await html5QrCode.stop();
             }
+
             await html5QrCode.clear();
+
         } catch (error) {
             console.log(error);
         }
@@ -393,32 +458,10 @@ async function stopScanner() {
     }
 
     document.getElementById("scanner").style.display = "none";
+
     document.getElementById("stopScanner").style.display = "none";
 }
-        // تشغيل التطبيق
-        showProducts();
-        showCart();
-async function testCamera() {
-    const video = document.getElementById("scanner");
 
-    if (!video.srcObject) {
-        alert("شغّل الكاميرا أولاً");
-        return;
-    }
-
-    const track = video.srcObject.getVideoTracks()[0];
-    const capabilities = track.getCapabilities();
-    const settings = track.getSettings();
-
-    alert(
-        "معلومات الكاميرا:\n\n" +
-        "الدقة: " + settings.width + " × " + settings.height + "\n" +
-        "التركيز: " + (capabilities.focusMode || "غير معروف") + "\n" +
-        "التقريب: " + (capabilities.zoom ? "مدعوم" : "غير مدعوم") + "\n" +
-        "وضع التركيز المستمر: " +
-        (capabilities.focusMode?.includes("continuous") ? "مدعوم" : "غير مدعوم")
-    );
-}
     </script>
 
 </body>
