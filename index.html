@@ -97,9 +97,7 @@
 <div id="scanner"
      style="width:100%;display:none;border-radius:12px;overflow:hidden">
 </div>
-<button onclick="testCamera()"
-        style="width:100%;padding:12px;margin:10px 0">
-    🔍 فحص الكاميرا
+
 </button>
 <button onclick="stopScanner()"
         id="stopScanner"
@@ -348,7 +346,7 @@ function isValidEAN13(code) {
     return checkDigit === digits[12];
 }
 
-async function startScanner() {
+        async function startScanner() {
     const scanner = document.getElementById("scanner");
     const stopButton = document.getElementById("stopScanner");
 
@@ -368,48 +366,35 @@ async function startScanner() {
             }
         );
 
-        const config = {
-            fps: 12,
-
-            qrbox: (width, height) => {
-                return {
-                    width: Math.min(width - 30, 360),
-                    height: Math.min(height - 30, 140)
-                };
-            },
-
-            aspectRatio: 16 / 9,
-
-            videoConstraints: {
-                facingMode: "environment",
-                width: { ideal: 1920 },
-                height: { ideal: 1080 },
-                frameRate: { ideal: 24 },
-                advanced: [
-                    { focusMode: "continuous" }
-                ]
-            }
-        };
-
         scannerRunning = true;
 
         await html5QrCode.start(
             { facingMode: "environment" },
-            config,
+
+            {
+                fps: 12,
+
+                qrbox: (width, height) => {
+                    return {
+                        width: Math.min(width - 30, 360),
+                        height: Math.min(height - 30, 140)
+                    };
+                },
+
+                aspectRatio: 16 / 9
+            },
 
             async (decodedText) => {
                 if (!scannerRunning) return;
 
                 const barcode = decodedText.trim();
 
-                // تجاهل أي قراءة ليست EAN-13 صحيحة
                 if (!isValidEAN13(barcode)) {
                     lastCandidate = "";
                     sameCandidateCount = 0;
                     return;
                 }
 
-                // انتظار قراءتين متطابقتين
                 if (barcode === lastCandidate) {
                     sameCandidateCount++;
                 } else {
@@ -417,7 +402,6 @@ async function startScanner() {
                     sameCandidateCount = 1;
                 }
 
-                // قبول الرقم بعد قراءتين متطابقتين
                 if (sameCandidateCount >= 2) {
                     scannerRunning = false;
 
@@ -430,6 +414,74 @@ async function startScanner() {
             () => {}
         );
 
+        /*
+         * بعد تشغيل الكاميرا فعلياً،
+         * نقرأ قدراتها الحقيقية ثم نطلب أفضل
+         * إعدادات متاحة للتركيز والدقة.
+         */
+
+        try {
+            const capabilities =
+                html5QrCode.getRunningTrackCapabilities();
+
+            console.log("Camera capabilities:", capabilities);
+
+            const constraints = {};
+
+            if (capabilities.width) {
+                constraints.width = {
+                    ideal: capabilities.width.max
+                };
+            }
+
+            if (capabilities.height) {
+                constraints.height = {
+                    ideal: capabilities.height.max
+                };
+            }
+
+            if (capabilities.frameRate) {
+                constraints.frameRate = {
+                    ideal: Math.min(
+                        capabilities.frameRate.max,
+                        30
+                    )
+                };
+            }
+
+            if (
+                capabilities.focusMode &&
+                capabilities.focusMode.includes("continuous")
+            ) {
+                constraints.focusMode = "continuous";
+            }
+
+            if (Object.keys(constraints).length > 0) {
+                try {
+                    await html5QrCode.applyVideoConstraints(
+                        constraints
+                    );
+
+                    console.log(
+                        "Camera constraints applied:",
+                        constraints
+                    );
+
+                } catch (error) {
+                    console.log(
+                        "Could not apply camera constraints:",
+                        error
+                    );
+                }
+            }
+
+        } catch (error) {
+            console.log(
+                "Could not read camera capabilities:",
+                error
+            );
+        }
+
     } catch (error) {
         scannerRunning = false;
 
@@ -437,7 +489,9 @@ async function startScanner() {
 
         await stopScanner();
     }
-}
+        }
+
+
 
 async function stopScanner() {
     scannerRunning = false;
