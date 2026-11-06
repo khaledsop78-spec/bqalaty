@@ -97,7 +97,10 @@
 <div id="scanner"
      style="width:100%;display:none;border-radius:12px;overflow:hidden">
 </div>
-
+<div id="zoomControls" style="display:none;gap:10px;margin:10px 0">
+    <button onclick="setCameraZoom(2)">تكبير 2×</button>
+    <button onclick="setCameraZoom(1)">رجوع 1×</button>
+</div>
 </button>
 <button onclick="stopScanner()"
         id="stopScanner"
@@ -357,7 +360,7 @@ async function startScanner() {
 
         scanner.style.display = "block";
         stopButton.style.display = "block";
-
+document.getElementById("zoomControls").style.display = "flex";
         html5QrCode = new Html5Qrcode(
             "scanner",
             {
@@ -445,7 +448,31 @@ async function startScanner() {
     }
 }
 
+async function setCameraZoom(level) {
+    try {
+        const capabilities =
+            html5QrCode.getRunningTrackCapabilities();
 
+        if (!capabilities.zoom) {
+            alert("الكاميرا لا تدعم التكبير");
+            return;
+        }
+
+        const zoom = Math.max(
+            capabilities.zoom.min,
+            Math.min(level, capabilities.zoom.max)
+        );
+
+        await html5QrCode.applyVideoConstraints({
+            advanced: [{ zoom: zoom }]
+        });
+
+        alert("تم ضبط التكبير على " + zoom + "×");
+
+    } catch (error) {
+        alert("تعذر تغيير التكبير: " + error.message);
+    }
+}
 async function stopScanner() {
     scannerRunning = false;
 
@@ -466,7 +493,9 @@ async function stopScanner() {
 
     document.getElementById("scanner").style.display = "none";
 
-    document.getElementById("stopScanner").style.display = "none";
+   document.getElementById("stopScanner").style.display = "none";
+
+    document.getElementById("zoomControls").style.display = "none";
 }
 
     </script>
