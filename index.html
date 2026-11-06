@@ -97,6 +97,10 @@
 <div id="scanner"
      style="width:100%;display:none;border-radius:12px;overflow:hidden">
 </div>
+    <button onclick="listAvailableCameras()"
+        style="width:100%;padding:12px;margin:10px 0">
+    📷 فحص العدسات المتاحة
+    </button>    
 <div id="zoomControls" style="display:none;gap:10px;margin:10px 0">
     <button onclick="setCameraZoom(2)">تكبير 2×</button>
     <button onclick="setCameraZoom(1)">رجوع 1×</button>
@@ -348,7 +352,32 @@ function isValidEAN13(code) {
 
     return checkDigit === digits[12];
 }
+async function listAvailableCameras() {
+    try {
+        const cameras = await Html5Qrcode.getCameras();
 
+        if (!cameras || cameras.length === 0) {
+            alert("لم يتم العثور على كاميرات");
+            return;
+        }
+
+        let result = "الكاميرات المتاحة:\n\n";
+
+        cameras.forEach((camera, index) => {
+            result +=
+                (index + 1) + ". " +
+                (camera.label || "كاميرا بدون اسم") +
+                "\n\n";
+        });
+
+        result += "عدد الكاميرات: " + cameras.length;
+
+        alert(result);
+
+    } catch (error) {
+        alert("تعذر فحص الكاميرات: " + error.message);
+    }
+}
         
 async function startScanner() {
     const scanner = document.getElementById("scanner");
