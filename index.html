@@ -399,11 +399,11 @@ document.getElementById("zoomControls").style.display = "flex";
 
         scannerRunning = true;
 
-        await html5QrCode.start(
-            "325bb36a7af73fe5daa6dab2904a187b389619ca59839d81de933a94bf05aaa1",,
-            {
-                fps: 12,
-
+           await html5QrCode.start(
+    { facingMode: "environment" },
+    {
+        fps: 12,
+        
                 qrbox: (width, height) => ({
                     width: Math.min(width - 30, 360),
                     height: Math.min(height - 30, 140)
