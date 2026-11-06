@@ -346,7 +346,8 @@ function isValidEAN13(code) {
     return checkDigit === digits[12];
 }
 
-        async function startScanner() {
+        
+async function startScanner() {
     const scanner = document.getElementById("scanner");
     const stopButton = document.getElementById("stopScanner");
 
@@ -370,18 +371,31 @@ function isValidEAN13(code) {
 
         await html5QrCode.start(
             { facingMode: "environment" },
-
             {
                 fps: 12,
 
-                qrbox: (width, height) => {
-                    return {
-                        width: Math.min(width - 30, 360),
-                        height: Math.min(height - 30, 140)
-                    };
-                },
+                qrbox: (width, height) => ({
+                    width: Math.min(width - 30, 360),
+                    height: Math.min(height - 30, 140)
+                }),
 
-                aspectRatio: 16 / 9
+                videoConstraints: {
+                    facingMode: { ideal: "environment" },
+
+                    width: {
+                        min: 720,
+                        ideal: 1080
+                    },
+
+                    height: {
+                        min: 1280,
+                        ideal: 1920
+                    },
+
+                    frameRate: {
+                        ideal: 30
+                    }
+                }
             },
 
             async (decodedText) => {
@@ -414,61 +428,13 @@ function isValidEAN13(code) {
             () => {}
         );
 
-        /*
-         * بعد تشغيل الكاميرا فعلياً،
-         * نقرأ قدراتها الحقيقية ثم نطلب أفضل
-         * إعدادات متاحة للتركيز والدقة.
-         */
-try {
-    const capabilities =
-        html5QrCode.getRunningTrackCapabilities();
+        const settings =
+            html5QrCode.getRunningTrackSettings();
 
-    const settings =
-        html5QrCode.getRunningTrackSettings();
-
-    let message =
-        "إعدادات الكاميرا الفعلية:\n\n" +
-
-        "الدقة: " +
-        (settings.width || "غير معروف") +
-        " × " +
-        (settings.height || "غير معروف") +
-        "\n\n" +
-
-        "FPS: " +
-        (settings.frameRate || "غير معروف") +
-        "\n\n" +
-
-        "Focus Mode: " +
-        (settings.focusMode || "غير متوفر") +
-        "\n\n" +
-
-        "Zoom الحالي: " +
-        (settings.zoom ?? "غير متوفر") +
-        "\n\n" +
-
-        "أوضاع التركيز المدعومة:\n" +
-        (capabilities.focusMode
-            ? capabilities.focusMode.join(", ")
-            : "غير متوفرة") +
-        "\n\n" +
-
-        "Zoom مدعوم: " +
-        (capabilities.zoom ? "نعم" : "لا");
-
-    alert(message);
-
-    console.log("Camera capabilities:", capabilities);
-    console.log("Camera settings:", settings);
-
-} catch (error) {
-    console.log(
-        "Could not read camera information:",
-        error
-    );
-}
-        
-               
+        alert(
+            "دقة الكاميرا بعد التعديل:\n" +
+            settings.width + " × " + settings.height
+        );
 
     } catch (error) {
         scannerRunning = false;
@@ -477,8 +443,7 @@ try {
 
         await stopScanner();
     }
-        }
-
+}
 
 
 async function stopScanner() {
