@@ -410,23 +410,20 @@ document.getElementById("zoomControls").style.display = "flex";
                 }),
 
                 videoConstraints: {
-                    facingMode: { ideal: "environment" },
+    width: {
+        min: 720,
+        ideal: 1920
+    },
 
-                    width: {
-                        min: 720,
-                        ideal: 1080
-                    },
+    height: {
+        min: 720,
+        ideal: 1080
+    },
 
-                    height: {
-                        min: 1280,
-                        ideal: 1920
-                    },
-
-                    frameRate: {
-                        ideal: 30
-                    }
+    frameRate: {
+        ideal: 30
+    }
                 }
-            },
 
             async (decodedText) => {
                 if (!scannerRunning) return;
