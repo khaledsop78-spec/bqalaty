@@ -456,7 +456,13 @@ document.getElementById("zoomControls").style.display = "flex";
 
             () => {}
         );
+const video = document.querySelector("#scanner video");
 
+if (video) {
+    video.style.width = "100%";
+    video.style.height = "auto";
+    video.style.objectFit = "contain";
+}
         const settings =
             html5QrCode.getRunningTrackSettings();
 
