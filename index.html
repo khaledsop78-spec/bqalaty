@@ -97,6 +97,21 @@
 <div id="scanner"
      style="width:100%;display:none;border-radius:12px;overflow:hidden">
 </div>
+        <div id="directCamera"
+     style="display:none;width:100%;overflow:hidden;border-radius:12px">
+    <video id="directVideo"
+           autoplay
+           playsinline
+           muted
+           style="width:100%;height:auto;display:block">
+    </video>
+</div>
+
+<button id="directCameraButton"
+        onclick="testDirectCamera()"
+        style="width:100%;padding:12px;margin:10px 0">
+    🔍 اختبار الكاميرا المباشر
+</button>
     <button onclick="listAvailableCameras()"
         style="width:100%;padding:12px;margin:10px 0">
     📷 فحص العدسات المتاحة
@@ -376,7 +391,35 @@ async function listAvailableCameras() {
         alert("خطأ: " + error.message);
     }
 }
-        
+    async function testDirectCamera() {
+    const video = document.getElementById("directVideo");
+    const container = document.getElementById("directCamera");
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: "environment",
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            },
+            audio: false
+        });
+
+        video.srcObject = stream;
+        container.style.display = "block";
+
+        const track = stream.getVideoTracks()[0];
+        const settings = track.getSettings();
+
+        alert(
+            "الكاميرا المباشرة:\n" +
+            settings.width + " × " + settings.height
+        );
+
+    } catch (error) {
+        alert("تعذر تشغيل الكاميرا المباشرة: " + error.message);
+    }
+    }    
 async function startScanner() {
     const scanner = document.getElementById("scanner");
     const stopButton = document.getElementById("stopScanner");
