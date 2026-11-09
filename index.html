@@ -397,11 +397,7 @@ async function listAvailableCameras() {
 
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: "environment",
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
-            },
+            video: true,
             audio: false
         });
 
@@ -412,14 +408,14 @@ async function listAvailableCameras() {
         const settings = track.getSettings();
 
         alert(
-            "الكاميرا المباشرة:\n" +
+            "الدقة:\n" +
             settings.width + " × " + settings.height
         );
 
     } catch (error) {
-        alert("تعذر تشغيل الكاميرا المباشرة: " + error.message);
+        alert("تعذر تشغيل الكاميرا: " + error.message);
     }
-    }    
+    }
 async function startScanner() {
     const scanner = document.getElementById("scanner");
     const stopButton = document.getElementById("stopScanner");
