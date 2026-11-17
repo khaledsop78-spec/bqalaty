@@ -392,32 +392,72 @@ async function listAvailableCameras() {
     }
 }
     async function testDirectCamera() {
+    
+let directCameraStream = null;
+let directCameraIndex = 0;
+
+async function testDirectCamera() {
     const video = document.getElementById("directVideo");
     const container = document.getElementById("directCamera");
 
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-    facingMode: { exact: "environment" }
-},
-audio: false
-        });
+        // إغلاق الكاميرا السابقة
+        if (directCameraStream) {
+            directCameraStream.getTracks().forEach(track => track.stop());
+            directCameraStream = null;
+        }
 
-        video.srcObject = stream;
-        container.style.display = "block";
+        // جلب الكاميرات المتاحة
+        const cameras = await navigator.mediaDevices.enumerateDevices();
 
-        const track = stream.getVideoTracks()[0];
-        const settings = track.getSettings();
-
-        alert(
-            "الدقة:\n" +
-            settings.width + " × " + settings.height
+        const backCameras = cameras.filter(device =>
+            device.kind === "videoinput" &&
+            /back|rear|environment|خلف/i.test(device.label)
         );
 
+        if (backCameras.length === 0) {
+            alert("لم يتم العثور على كاميرات خلفية");
+            return;
+        }
+
+        // الانتقال للكاميرا التالية
+        if (directCameraIndex >= backCameras.length) {
+            directCameraIndex = 0;
+        }
+
+        const camera = backCameras[directCameraIndex];
+
+        directCameraStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                deviceId: { exact: camera.deviceId },
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            },
+            audio: false
+        });
+
+        video.srcObject = directCameraStream;
+        container.style.display = "block";
+
+        const settings = directCameraStream
+            .getVideoTracks()[0]
+            .getSettings();
+
+        alert(
+            "الكاميرا " + (directCameraIndex + 1) +
+            " من " + backCameras.length + "\n" +
+            "الاسم: " + camera.label + "\n" +
+            "الدقة: " + settings.width +
+            " × " + settings.height
+        );
+
+        directCameraIndex++;
+
     } catch (error) {
-        alert("تعذر تشغيل الكاميرا: " + error.message);
+        alert("خطأ في الكاميرا: " + error.message);
     }
-    }
+}
+
 async function startScanner() {
     const scanner = document.getElementById("scanner");
     const stopButton = document.getElementById("stopScanner");
