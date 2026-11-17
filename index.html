@@ -397,8 +397,10 @@ async function listAvailableCameras() {
 
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false
+            video: {
+    facingMode: { exact: "environment" }
+},
+audio: false
         });
 
         video.srcObject = stream;
