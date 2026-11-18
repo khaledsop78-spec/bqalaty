@@ -272,56 +272,96 @@
 
 
         // إضافة منتج إلى السلة
-        function addToCart(barcode) {
+        
+function addToCart(barcode) {
+    if (!products[barcode]) {
+        alert("هذا المنتج غير مسجل.");
+        return;
+    }
 
-            if (!products[barcode]) {
-                alert("هذا المنتج غير مسجل.");
-                return;
-            }
+    const existingProduct = cart.find(
+        item => item.barcode === barcode
+    );
 
-            cart.push(products[barcode]);
+    if (existingProduct) {
+        existingProduct.quantity++;
+    } else {
+        cart.push({
+            barcode: barcode,
+            name: products[barcode].name,
+            price: products[barcode].price,
+            quantity: 1
+        });
+    }
 
-            showCart();
-        }
+    showCart();
+}
+
 
 
         // عرض السلة
-        function showCart() {
+        
+function showCart() {
+    const container = document.getElementById("cart");
+    const totalElement = document.getElementById("total");
 
-            const container =
-                document.getElementById("cart");
+    container.innerHTML = "";
+    let total = 0;
 
-            const totalElement =
-                document.getElementById("total");
+    cart.forEach((product, index) => {
+        const div = document.createElement("div");
+        div.className = "product";
 
-            container.innerHTML = "";
+        const nameDiv = document.createElement("div");
+        nameDiv.textContent = product.name;
 
-            let total = 0;
+        const priceDiv = document.createElement("div");
+        priceDiv.textContent =
+            product.price.toFixed(2) + " ريال للقطعة";
 
-            cart.forEach((product) => {
+        const minusButton = document.createElement("button");
+        minusButton.textContent = "−";
+        minusButton.onclick = () => changeQuantity(index, -1);
 
-                const div = document.createElement("div");
+        const quantityText = document.createElement("span");
+        quantityText.textContent = " " + product.quantity + " ";
 
-                div.className = "product";
+        const plusButton = document.createElement("button");
+        plusButton.textContent = "+";
+        plusButton.onclick = () => changeQuantity(index, 1);
 
-                div.innerHTML = `
-                    <div>
-                        ${product.name}
-                    </div>
+        const subtotal = document.createElement("div");
+        subtotal.textContent =
+            (product.price * product.quantity).toFixed(2)
+            + " ريال";
 
-                    <div>
-                        ${product.price.toFixed(2)} ريال
-                    </div>
-                `;
+        const controls = document.createElement("div");
+        controls.append(
+            minusButton,
+            quantityText,
+            plusButton
+        );
 
-                container.appendChild(div);
+        div.append(nameDiv, priceDiv, controls, subtotal);
+        container.appendChild(div);
 
-                total += product.price;
-            });
+        total += product.price * product.quantity;
+    });
 
-            totalElement.textContent =
-                total.toFixed(2);
-        }
+    totalElement.textContent = total.toFixed(2);
+}
+
+function changeQuantity(index, amount) {
+    if (!cart[index]) return;
+
+    cart[index].quantity += amount;
+
+    if (cart[index].quantity <= 0) {
+        cart.splice(index, 1);
+    }
+
+    showCart();
+}
 
 
         // حذف منتج من المنتجات المسجلة
