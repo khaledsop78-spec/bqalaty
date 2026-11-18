@@ -478,10 +478,19 @@ document.getElementById("zoomControls").style.display = "flex";
         );
 
         scannerRunning = true;
+const cameras = await Html5Qrcode.getCameras();
 
+const selectedCamera = cameras.find(camera =>
+    camera.label.toLowerCase().includes("camera 0") &&
+    camera.label.toLowerCase().includes("back")
+);
+
+if (!selectedCamera) {
+    throw new Error("لم يتم العثور على الكاميرا الخلفية المطلوبة");
+}
            
 await html5QrCode.start(
-    { facingMode: "environment" },
+    { deviceId: { exact: selectedCamera.id } },
     {
         fps: 12,
         qrbox: (width, height) => ({
