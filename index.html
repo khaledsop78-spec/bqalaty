@@ -147,6 +147,10 @@
             placeholder="باركود المنتج"
         >
 
+<button type="button" onclick="startProductScanner()">
+    📷 مسح باركود المنتج
+</button>
+
         <input
             type="text"
             id="name"
@@ -497,7 +501,7 @@ async function testDirectCamera() {
     }
 }
 
-async function startScanner() {
+async function startScanner(mode = "cart") {
     const scanner = document.getElementById("scanner");
     const stopButton = document.getElementById("stopScanner");
 
@@ -559,10 +563,14 @@ await html5QrCode.start(
 
                 if (sameCandidateCount >= 2) {
                     scannerRunning = false;
+await stopScanner();
 
-                    await stopScanner();
-
-                    addToCart(barcode);
+if (mode === "register") {
+    document.getElementById("barcode").value = barcode;
+} else {
+    addToCart(barcode);
+}
+                    
                 }
             },
 
@@ -592,7 +600,9 @@ if (video) {
         await stopScanner();
     }
 }
-
+function startProductScanner() {
+    startScanner("register");
+}
 async function setCameraZoom(level) {
     try {
         const capabilities =
